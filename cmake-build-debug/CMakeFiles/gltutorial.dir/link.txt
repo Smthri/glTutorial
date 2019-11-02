@@ -1,0 +1,1 @@
+/usr/bin/g++  -g   CMakeFiles/gltutorial.dir/main.cpp.o  -o gltutorial -lm -lglut -lGLEW -lGL -lGLU -lglfw3 -lpthread -lXi -lX11 -lXxf86vm -lXrandr -ldl 

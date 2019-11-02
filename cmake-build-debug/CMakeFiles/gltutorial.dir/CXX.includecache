@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/nick/CLionProjects/gltutorial/glad.c
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+glad/glad.h
+-
+windows.h
+-
+winapifamily.h
+-
+dlfcn.h
+-
+
+/home/nick/CLionProjects/gltutorial/main.cpp
+iostream
+-
+cstdio
+-
+cstdlib
+-
+glad/glad.h
+-
+glad.c
+/home/nick/CLionProjects/gltutorial/glad.c
+GLFW/glfw3.h
+-
+

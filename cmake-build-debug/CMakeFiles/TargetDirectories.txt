@@ -1,0 +1,3 @@
+/home/nick/CLionProjects/gltutorial/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/nick/CLionProjects/gltutorial/cmake-build-debug/CMakeFiles/gltutorial.dir
+/home/nick/CLionProjects/gltutorial/cmake-build-debug/CMakeFiles/edit_cache.dir

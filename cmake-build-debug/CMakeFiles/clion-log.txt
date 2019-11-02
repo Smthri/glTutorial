@@ -1,0 +1,4 @@
+/home/nick/Documents/clion-2019.2.5/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=/usr/bin/g++ -G "CodeBlocks - Unix Makefiles" /home/nick/CLionProjects/gltutorial
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/nick/CLionProjects/gltutorial/cmake-build-debug
