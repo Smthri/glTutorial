@@ -27,6 +27,12 @@ iostream
 -
 cstdio
 -
+string
+-
+fstream
+-
+streambuf
+-
 cstdlib
 -
 glad/glad.h
@@ -34,5 +40,9 @@ glad/glad.h
 glad.c
 /home/nick/CLionProjects/gltutorial/glad.c
 GLFW/glfw3.h
+-
+sstream
+-
+cmath
 -
 
