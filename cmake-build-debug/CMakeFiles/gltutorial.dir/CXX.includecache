@@ -47,6 +47,12 @@ Shader.h
 /home/nick/CLionProjects/gltutorial/Shader.h
 stb_image.h
 /home/nick/CLionProjects/gltutorial/stb_image.h
+glm/glm.hpp
+-
+glm/gtc/matrix_transform.hpp
+-
+glm/gtc/type_ptr.hpp
+-
 
 /home/nick/CLionProjects/gltutorial/stb_image.h
 stb_image.h
