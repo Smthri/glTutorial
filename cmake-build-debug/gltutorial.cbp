@@ -84,6 +84,9 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/nick/CLionProjects/gltutorial/Shader.h">
+			<Option target="gltutorial"/>
+		</Unit>
 		<Unit filename="/home/nick/CLionProjects/gltutorial/main.cpp">
 			<Option target="gltutorial"/>
 		</Unit>
