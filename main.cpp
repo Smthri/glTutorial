@@ -90,11 +90,13 @@ int main() {
     unsigned int VAO = bufferSetup();
     Shader ourShader("../vertexShaderSource.glsl", "../fragmentShaderSource.glsl");
 
+    stbi_set_flip_vertically_on_load(true);
+
     int height, width, nrChannels;
     unsigned char *data = stbi_load("../container.jpg", &width, &height, &nrChannels, 0);
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    unsigned int texture1;
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -102,6 +104,22 @@ int main() {
         std::cout << "Error loading texture data" << std::endl;
     }
     stbi_image_free(data);
+
+    data = stbi_load("../awesomeface.png", &width, &height, &nrChannels, 0);
+    unsigned int texture2;
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "Error loading texture 2 data" << std::endl;
+    }
+    stbi_image_free(data);
+
+    ourShader.use();
+    glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+    ourShader.setInt("texture2", 1);
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
@@ -112,7 +130,10 @@ int main() {
 
         ourShader.use();
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
