@@ -87,6 +87,12 @@
 		<Unit filename="/home/nick/CLionProjects/gltutorial/Camera.h">
 			<Option target="gltutorial"/>
 		</Unit>
+		<Unit filename="/home/nick/CLionProjects/gltutorial/Mesh.h">
+			<Option target="gltutorial"/>
+		</Unit>
+		<Unit filename="/home/nick/CLionProjects/gltutorial/Model.h">
+			<Option target="gltutorial"/>
+		</Unit>
 		<Unit filename="/home/nick/CLionProjects/gltutorial/Shader.h">
 			<Option target="gltutorial"/>
 		</Unit>
