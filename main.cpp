@@ -20,8 +20,10 @@ unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<string> faces);
 void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader, bool depth, unsigned int depthMap);
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 900;
+
+Model *myModel;
 
 unsigned int planeVAO;
 unsigned int cubeVAO;
@@ -103,7 +105,7 @@ int main()
     Shader planeShader("../vertexShaderSource.glsl", "../fragmentShaderSource.glsl");
     Shader simpleDepthShader("../vDepthShader.glsl", "../fDepthShader.glsl");
 
-    //Model ourModel("../meshes/nanosuit/nanosuit.obj");
+    myModel = new Model("../meshes/spaceship/Intergalactic_Spaceship-(Wavefront).obj");
 
     float vertices[] = {
             // positions          // normals           // texture coords
@@ -240,15 +242,15 @@ int main()
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glBindVertexArray(0);
-    woodTexture = loadTexture("../wood.png");
+    woodTexture = loadTexture("../marble.jpg");
 
     vector<string> faces = {
-            "../skybox/right.jpg",
-            "../skybox/left.jpg",
-            "../skybox/top.jpg",
-            "../skybox/bottom.jpg",
-            "../skybox/front.jpg",
-            "../skybox/back.jpg"
+            "../hw_nightsky/nightsky_ft.tga",
+            "../hw_nightsky/nightsky_bk.tga",
+            "../hw_nightsky/nightsky_up.tga",
+            "../hw_nightsky/nightsky_dn.tga",
+            "../hw_nightsky/nightsky_rt.tga",
+            "../hw_nightsky/nightsky_lf.tga"
     };
     cubeMapTexture = loadCubemap(faces);
 
@@ -330,7 +332,6 @@ int main()
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-        //configure shader and matrixes and render scene
         RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -362,7 +363,7 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader
     lightingShader.setVec3("viewPos", camera.Position);
     lightingShader.setFloat("material.shininess", 64.0f);
 
-    glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+    glm::vec3 lightColor(1.0f, 0.5f, 0.0f);
 
     glm::vec3 diffusecolor = lightColor * glm::vec3(0.8);
     glm::vec3 ambientcolor = lightColor * glm::vec3(0.5);
@@ -410,6 +411,13 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader
     lightingShader.setMat4("view", view);
 
     glm::mat4 model = glm::mat4(1.0f);
+    model = glm::scale(model, glm::vec3(0.1f));
+    model = glm::rotate(model, (float) glm::radians(-20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(-2.0f, 6.5f, 0.0f));
+    lightingShader.setMat4("model", model);
+
+    myModel->Draw(lightingShader);
+    model = glm::mat4(1.0f);
     lightingShader.setMat4("model", model);
 
     glActiveTexture(GL_TEXTURE0);

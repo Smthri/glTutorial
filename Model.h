@@ -72,7 +72,7 @@ private:
 
         glm::vec3 vect;
         glm::vec2 vec;
-        for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+        for (unsigned int i = 0; i < mesh->mNumVertices/2; ++i) {
             Vertex vertex;
             // do smth
             vect.x = mesh->mVertices[i].x;
@@ -97,7 +97,7 @@ private:
             vertices.push_back(vertex);
         }
         // process indices
-        for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
+        for (unsigned int i = 0; i < mesh->mNumFaces/2; ++i) {
             aiFace face = mesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; ++j) {
                 indices.push_back(face.mIndices[j]);

@@ -12,16 +12,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="26603c9c-19b3-4d25-887b-506a70dd7ca4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/fDepthShader.glsl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/vDepthShader.glsl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/wood.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hw_nightsky/hw_nightsky.shader" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hw_nightsky/license.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hw_nightsky/nightsky_bk.tga" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hw_nightsky/nightsky_dn.tga" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hw_nightsky/nightsky_ft.tga" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hw_nightsky/nightsky_lf.tga" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hw_nightsky/nightsky_rt.tga" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hw_nightsky/nightsky_up.tga" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/marble.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/spaceship/Intergalactic_Spaceship-(Wavefront).mtl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/spaceship/Intergalactic_Spaceship-(Wavefront).obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/textures/Intergalactic Spaceship Ao_Blender.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/textures/Intergalactic Spaceship_color_4.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/textures/Intergalactic Spaceship_curvature.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/textures/Intergalactic Spaceship_emi.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/textures/Intergalactic Spaceship_metalness.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/textures/Intergalactic Spaceship_nmap_2_Tris.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meshes/textures/Intergalactic Spaceship_rough.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/wood1.jpeg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model.h" beforeDir="false" afterPath="$PROJECT_DIR$/Model.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/gltutorial.dir/main.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/gltutorial.dir/main.cpp.o" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/gltutorial" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/gltutorial" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fragmentShaderSource.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/fragmentShaderSource.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/skyboxVertex.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/skyboxVertex.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vertexShaderSource.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/vertexShaderSource.glsl" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -51,6 +67,12 @@
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/meshes" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -91,6 +113,8 @@
       <workItem from="1573567919005" duration="6667000" />
       <workItem from="1573665543892" duration="11795000" />
       <workItem from="1573813874274" duration="15260000" />
+      <workItem from="1573995328349" duration="1600000" />
+      <workItem from="1573997533942" duration="6649000" />
     </task>
     <servers />
   </component>
