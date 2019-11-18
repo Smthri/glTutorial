@@ -55,8 +55,8 @@ glm::vec3 cubePositions[] = {
         glm::vec3( 0.0f,  0.0f,  0.0f),
         glm::vec3( 1.5f,  0.0f, 0.0f),
         glm::vec3(1.0f, 1.0f, 0.0f),
-        glm::vec3(-3.8f, 0.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-3.8f, 0.0f, -17.4f),
+        glm::vec3( 0.5f, 0.0f, 1.0f),
         glm::vec3(-1.7f,  3.0f, -7.5f),
         glm::vec3( 1.3f, -2.0f, -2.5f),
         glm::vec3( 1.5f,  2.0f, -2.5f),
@@ -103,7 +103,7 @@ int main()
     Shader lampShader("../lightVertexShader.glsl", "../lightFragmentShader.glsl");
     Shader skyboxShader("../skyboxVertex.glsl", "../skyboxFragment.glsl");
     Shader planeShader("../vertexShaderSource.glsl", "../fragmentShaderSource.glsl");
-    Shader simpleDepthShader("../vDepthShader.glsl", "../fDepthShader.glsl");
+    Shader simpleDepthShader("../vDepthShader.glsl", "../fDepthShader.glsl", "../gDepthShader.glsl");
 
     myModel = new Model("../meshes/spaceship/Intergalactic_Spaceship-(Wavefront).obj");
 
@@ -212,17 +212,21 @@ int main()
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
     const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-    unsigned int depthMap;
-    glGenTextures(1, &depthMap);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    unsigned int depthCubemap;
+    glGenTextures(1, &depthCubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+    for (int i = 0; i < 6; ++i) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -313,33 +317,43 @@ int main()
         lastFrame = currentFrame;
 
         processInput(window);
-        pointLightPositions[0].y = 1.0 + 0.2*sin(3*glfwGetTime());
+        pointLightPositions[0].x = 1.0 + 0.7*sin(3*glfwGetTime());
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float near_plane = 1.0f, far_plane = 10.5f;
-        glm::mat4 lightProjection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
-        glm::mat4 lightView = glm::lookAt(pointLightPositions[0], glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+        float near_plane = 1.0f, far_plane = 25.0f;
+        glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float) SHADOW_WIDTH / (float) SHADOW_HEIGHT, near_plane, far_plane);
+        std::vector<glm::mat4> shadowTransforms;
+        shadowTransforms.push_back(shadowProj * glm::lookAt(pointLightPositions[0], pointLightPositions[0] + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(pointLightPositions[0], pointLightPositions[0] + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(pointLightPositions[0], pointLightPositions[0] + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(pointLightPositions[0], pointLightPositions[0] + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(pointLightPositions[0], pointLightPositions[0] + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(pointLightPositions[0], pointLightPositions[0] + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+
+        //glm::mat4 lightView = glm::lookAt(pointLightPositions[0], glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+        //glm::mat4 lightSpaceMatrix = lightProjection * lightView;
         simpleDepthShader.use();
-        simpleDepthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        for (int i = 0; i < 6; ++i)
+            simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+        simpleDepthShader.setFloat("far_plane", far_plane);
+        simpleDepthShader.setVec3("lightPos", pointLightPositions[0]);
         planeShader.use();
-        planeShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        planeShader.setFloat("far_plane", far_plane);
         lightingShader.use();
-        lightingShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        lightingShader.setFloat("far_plane", far_plane);
 
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-        RenderScene(lightingShader, lampShader, planeShader, skyboxShader, true, depthMap);
+        RenderScene(lightingShader, lampShader, planeShader, skyboxShader, true, depthCubemap);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -426,16 +440,20 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader
     glBindTexture(GL_TEXTURE_2D, specularMap);
     if (depth) {
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
     }
 
     glBindVertexArray(cubeVAO);
-    for(int i = 0; i < 4; ++i) // max 10
+    for(int i = 0; i < 5; ++i) // max 10
     {
         model = glm::mat4(1.0f);
         model = glm::translate(model, cubePositions[i]);
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        if (i == 4) {
+            model = glm::scale(model, glm::vec3(0.5f));
+            model = glm::translate(model, glm::vec3(0.3f, -0.5f, 0.0f));
+        }
         lightingShader.setMat4("model", model);
 
         //ourModel.Draw(lightingShader);
@@ -497,7 +515,7 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader
     glBindTexture(GL_TEXTURE_2D, woodTexture);
     if (depth) {
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
     }
     glBindVertexArray(planeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
