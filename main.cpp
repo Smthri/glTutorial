@@ -29,12 +29,10 @@ Model *myModel;
 
 unsigned int quadVBO, quadVAO;
 
-unsigned int planeVAO;
 unsigned int cubeVAO;
 unsigned int lightVAO;
 unsigned int diffuseMap;
 unsigned int specularMap;
-unsigned int woodTexture;
 unsigned int skyboxVAO;
 unsigned int cubeMapTexture;
 
@@ -45,8 +43,6 @@ bool firstMouse = true;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-glm::vec3 lightPos(1.2f, 1.0f, -2.0f);
 
 glm::vec3 pointLightPositions[] = {
         glm::vec3( 0.7f,  0.2f,  2.0f),
@@ -105,10 +101,10 @@ int main()
     Shader lightingShader("../vertexShaderSource.glsl", "../fragmentShaderSource.glsl");
     Shader lampShader("../lightVertexShader.glsl", "../lightFragmentShader.glsl");
     Shader skyboxShader("../skyboxVertex.glsl", "../skyboxFragment.glsl");
-    Shader planeShader("../vertexShaderSource.glsl", "../fragmentShaderSource.glsl");
     Shader simpleDepthShader("../vDepthShader.glsl", "../fDepthShader.glsl", "../gDepthShader.glsl");
     Shader stencilShader("../vertexShaderSource.glsl", "../fStencilShader.glsl");
     Shader screenShader("../qvShader.glsl", "../qfShader.glsl");
+    Shader wallshader("../wallvertexShader.glsl", "../wallfragmentShader.glsl");
 
     myModel = new Model("../meshes/spaceship/Intergalactic_Spaceship-(Wavefront).obj");
 
@@ -213,16 +209,6 @@ int main()
             1.0f, -1.0f,  1.0f
     };
 
-    float planeVertices[] = {
-            25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-            -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-            -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-
-            25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-            -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-            25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
-    };
-
     // The screen
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
@@ -281,22 +267,6 @@ int main()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //end
 
-
-    unsigned int planeVBO;
-    glGenVertexArrays(1, &planeVAO);
-    glGenBuffers(1, &planeVBO);
-    glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glBindVertexArray(0);
-    woodTexture = loadTexture("../marble.jpg");
-
     vector<string> faces = {
             "../hw_nightsky/nightsky_ft.tga",
             "../hw_nightsky/nightsky_bk.tga",
@@ -353,11 +323,6 @@ int main()
     lightingShader.setInt("material.specular", 1);
     lightingShader.setInt("shadowMap", 2);
 
-    planeShader.use();
-    planeShader.setInt("material.diffuse", 0);
-    planeShader.setInt("material.specular", 1);
-    planeShader.setInt("shadowMap", 2);
-
     screenShader.use();
     screenShader.setInt("screenTexture", 0);
 
@@ -370,7 +335,7 @@ int main()
         gauss = 0;
 
         processInput(window);
-        pointLightPositions[0].x = 1.0 + 0.7*sin(3*glfwGetTime());
+        pointLightPositions[0].x = 1.0 + 2.5*(sin(3*glfwGetTime()));
 
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         glEnable(GL_DEPTH_TEST);
@@ -382,7 +347,7 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        float near_plane = 1.0f, far_plane = 25.0f;
+        float near_plane = 1.0f, far_plane = 50.0f;
         glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float) SHADOW_WIDTH / (float) SHADOW_HEIGHT, near_plane, far_plane);
         std::vector<glm::mat4> shadowTransforms;
         shadowTransforms.push_back(shadowProj * glm::lookAt(pointLightPositions[0], pointLightPositions[0] + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
@@ -399,10 +364,10 @@ int main()
             simpleDepthShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
         simpleDepthShader.setFloat("far_plane", far_plane);
         simpleDepthShader.setVec3("lightPos", pointLightPositions[0]);
-        planeShader.use();
-        planeShader.setFloat("far_plane", far_plane);
         lightingShader.use();
         lightingShader.setFloat("far_plane", far_plane);
+        wallshader.use();
+        wallshader.setFloat("far_plane", far_plane);
 
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -413,7 +378,7 @@ int main()
 
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-        RenderScene(lightingShader, lampShader, planeShader, skyboxShader, true, depthCubemap, true, stencilShader);
+        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader);
 
         // now show the texture
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -441,7 +406,127 @@ int main()
     return 0;
 }
 
-void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader, bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader) {
+void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, bool depth, unsigned int depthMap) {
+    static unsigned int brickTexture = loadTexture("../marble.jpg");
+    static unsigned int brickNormalmap = loadTexture("../marble_normal.png");
+    static bool first = true;
+    static unsigned int wallVAO, wallVBO;
+
+    wallshader.use();
+    glm::mat4 model = glm::mat4(1.0f);
+    //model = glm::scale(model, glm::vec3(5.0f));
+    model = glm::translate(model, glm::vec3(0.0, -0.5, 0.0));
+    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    if (first) {
+        // positions
+        glm::vec3 pos1(-25.0f,  25.0f, 0.0f);
+        glm::vec3 pos2(-25.0f, -25.0f, 0.0f);
+        glm::vec3 pos3( 25.0f, -25.0f, 0.0f);
+        glm::vec3 pos4( 25.0f,  25.0f, 0.0f);
+        // texture coordinates
+        glm::vec2 uv1(0.0f, 25.0f);
+        glm::vec2 uv2(0.0f, 0.0f);
+        glm::vec2 uv3(25.0f, 0.0f);
+        glm::vec2 uv4(25.0f, 25.0f);
+        // normal vector
+        glm::vec3 nm(0.0f, 0.0f, 1.0f);
+
+        // calculate tangent/bitangent vectors of both triangles
+        glm::vec3 tangent1, bitangent1;
+        glm::vec3 tangent2, bitangent2;
+        // triangle 1
+        // ----------
+        glm::vec3 edge1 = pos2 - pos1;
+        glm::vec3 edge2 = pos3 - pos1;
+        glm::vec2 deltaUV1 = uv2 - uv1;
+        glm::vec2 deltaUV2 = uv3 - uv1;
+
+        GLfloat f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+        tangent1 = glm::normalize(tangent1);
+
+        bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+        bitangent1 = glm::normalize(bitangent1);
+
+        // triangle 2
+        // ----------
+        edge1 = pos3 - pos1;
+        edge2 = pos4 - pos1;
+        deltaUV1 = uv3 - uv1;
+        deltaUV2 = uv4 - uv1;
+
+        f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        tangent2.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent2.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent2.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+        tangent2 = glm::normalize(tangent2);
+
+
+        bitangent2.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent2.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent2.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+        bitangent2 = glm::normalize(bitangent2);
+
+
+        float wallVertices[] = {
+                // positions            // normal         // texcoords  // tangent                          // bitangent
+                pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+                pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+                pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+
+                pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+                pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+                pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
+        };
+        // configure plane VAO
+        glGenVertexArrays(1, &wallVAO);
+        glGenBuffers(1, &wallVBO);
+        glBindVertexArray(wallVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, wallVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(wallVertices), &wallVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(6 * sizeof(float)));
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(8 * sizeof(float)));
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
+
+        first = false;
+    }
+
+    wallshader.setInt("diffuseMap", 0);
+    wallshader.setInt("normalMap", 1);
+    wallshader.setInt("depthMap", 2);
+
+    wallshader.setMat4("projection", projection);
+    wallshader.setMat4("model", model);
+    wallshader.setMat4("view", camera.GetViewMatrix());
+    wallshader.setVec3("lightPos", lightPos);
+    wallshader.setVec3("viewPos", camera.Position);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, brickTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, brickNormalmap);
+    if (depth) {
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+    }
+    glBindVertexArray(wallVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader, Shader &skyboxShader, bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader) {
     glm::mat4 projection, view;
     projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
@@ -452,6 +537,8 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader
         stencilShader.setMat4("projection", projection);
         stencilShader.setMat4("view", view);
     }
+
+    renderWall(pointLightPositions[0], projection, wallshader, depth, depthMap);
 
     lightingShader.use();
     lightingShader.setVec3("viewPos", camera.Position);
@@ -527,52 +614,6 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-
-    model = glm::mat4(1.0f);
-    planeShader.use();
-    planeShader.setMat4("projection", projection);
-    planeShader.setMat4("view", view);
-    planeShader.setMat4("model", model);
-    planeShader.setVec3("viewPos", camera.Position);
-    planeShader.setFloat("material.shininess", 64.0f);
-
-    planeShader.setVec3("pointLight[0].position", pointLightPositions[0]);
-    planeShader.setVec3("pointLight[1].position", pointLightPositions[1]);
-    planeShader.setVec3("pointLight[2].position", pointLightPositions[2]);
-    planeShader.setVec3("pointLight[3].position", pointLightPositions[3]);
-
-    planeShader.setFloat("pointLight[0].constant", 1.0f);
-    planeShader.setFloat("pointLight[1].constant", 1.0f);
-    planeShader.setFloat("pointLight[2].constant", 1.0f);
-    planeShader.setFloat("pointLight[3].constant", 1.0f);
-
-    planeShader.setFloat("pointLight[0].linear", 0.039f);
-    planeShader.setFloat("pointLight[1].linear", 0.039f);
-    planeShader.setFloat("pointLight[2].linear", 0.039f);
-    planeShader.setFloat("pointLight[3].linear", 0.039f);
-
-    planeShader.setFloat("pointLight[0].quadratic", 0.03f);
-    planeShader.setFloat("pointLight[1].quadratic", 0.03f);
-    planeShader.setFloat("pointLight[2].quadratic", 0.03f);
-    planeShader.setFloat("pointLight[3].quadratic", 0.03f);
-
-    planeShader.setVec3("pointLight[0].ambient", ambientcolor);
-    planeShader.setVec3("pointLight[1].ambient", ambientcolor);
-    planeShader.setVec3("pointLight[2].ambient", ambientcolor);
-    planeShader.setVec3("pointLight[3].ambient", ambientcolor);
-
-    planeShader.setVec3("pointLight[0].diffuse", diffusecolor);
-    planeShader.setVec3("pointLight[1].diffuse", diffusecolor);
-    planeShader.setVec3("pointLight[2].diffuse", diffusecolor);
-    planeShader.setVec3("pointLight[3].diffuse", diffusecolor);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, woodTexture);
-    if (depth) {
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
-    }
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     // skybox
     view = glm::mat4(glm::mat3(camera.GetViewMatrix()));

@@ -76,11 +76,11 @@ float ShadowCalculation2(vec3 fragPos, vec3 normal, vec3 lightDir) {
     int samples = 20;
     vec3 sampleOffsetDirections[20] = vec3[]
     (
-        vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),
-        vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
-        vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
-        vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
-        vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+        vec3(1, 1, 1), vec3(1, -1, 1), vec3(-1, -1,  1), vec3(-1, 1, 1),
+        vec3(1, 1, -1), vec3(1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+        vec3(1, 1, 0), vec3(1, -1, 0), vec3(-1, -1,  0), vec3(-1, 1, 0),
+        vec3(1, 0, 1), vec3(-1, 0, 1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+        vec3(0, 1, 1), vec3(0, -1, 1), vec3( 0, -1, -1), vec3( 0, 1, -1)
     );
     float offset = 0.1;
     float radius = (1.0 + (viewDistance / far_plane)) / 25.0;

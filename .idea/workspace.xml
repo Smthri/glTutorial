@@ -12,15 +12,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="26603c9c-19b3-4d25-887b-506a70dd7ca4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/brickwall.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/brickwall_normal.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fStencilShader.glsl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/qfShader.glsl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/qvShader.glsl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/marble_normal.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/wallfragmentShader.glsl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/wallvertexShader.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/gltutorial.dir/main.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/gltutorial.dir/main.cpp.o" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/gltutorial" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/gltutorial" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fragmentShaderSource.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/fragmentShaderSource.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/marble.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/marble.jpg" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -42,6 +42,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="OCFindUsagesOptions" text="false" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectId" id="1T3pJ6MjGQIaGdTkrV4ouPRqgLA" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -100,6 +101,8 @@
       <workItem from="1573997533942" duration="7560000" />
       <workItem from="1574090950258" duration="13891000" />
       <workItem from="1574165573705" duration="16222000" />
+      <workItem from="1574359193319" duration="9999000" />
+      <workItem from="1574435078744" duration="5507000" />
     </task>
     <servers />
   </component>
