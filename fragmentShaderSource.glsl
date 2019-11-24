@@ -131,11 +131,7 @@ void main() {
     vec3 norm = normalize(fs_in.Normal);
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
     //vec3 result = CalcDirLight(dirLight, norm, viewDir);
-    vec3 result;
-
-    for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
-        result += CalcPointLight(pointLight[i], norm, fs_in.FragPos, viewDir);
-    }
+    vec3 result = CalcPointLight(pointLight[0], norm, fs_in.FragPos, viewDir);
 
     vec3 fogColor = vec3(0.5, 0.6, 0.7);
     float distance = length(viewPos - fs_in.FragPos);

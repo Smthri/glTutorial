@@ -18,7 +18,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<string> faces);
-void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader, bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader);
+void renderWindows(glm::mat4 projection, Shader &wallshader);
+void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader, bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader);
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
@@ -105,11 +106,11 @@ int main()
     Shader stencilShader("../vertexShaderSource.glsl", "../fStencilShader.glsl");
     Shader screenShader("../qvShader.glsl", "../qfShader.glsl");
     Shader wallshader("../wallvertexShader.glsl", "../wallfragmentShader.glsl");
+    Shader windowShader("../windowvShader.glsl", "../windowfShader.glsl");
 
     myModel = new Model("../meshes/spaceship/Intergalactic_Spaceship-(Wavefront).obj");
 
-    float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-            // positions   // texCoords
+    float quadVertices[] = {
             -1.0f,  1.0f,  0.0f, 1.0f,
             -1.0f, -1.0f,  0.0f, 0.0f,
             1.0f, -1.0f,  1.0f, 0.0f,
@@ -120,7 +121,6 @@ int main()
     };
 
     float vertices[] = {
-            // positions          // normals           // texture coords
             -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
@@ -209,7 +209,7 @@ int main()
             1.0f, -1.0f,  1.0f
     };
 
-    // The screen
+
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
     glBindVertexArray(quadVAO);
@@ -220,11 +220,10 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
-    // Framebuffer for screen
+
     unsigned int framebuffer;
     glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    // create a color attachment texture
     unsigned int textureColorbuffer;
     glGenTextures(1, &textureColorbuffer);
     glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
@@ -232,18 +231,16 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
-    // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
     unsigned int rbo;
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT); // use a single renderbuffer object for both a depth AND stencil buffer.
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
-    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // set up the depth map
+
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
     const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
@@ -265,7 +262,6 @@ int main()
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //end
 
     vector<string> faces = {
             "../hw_nightsky/nightsky_ft.tga",
@@ -343,6 +339,8 @@ int main()
         glStencilFunc(GL_NOTEQUAL, 1, 0xff);
         glStencilMask(0xff);
         glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -373,17 +371,17 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glStencilMask(0x00);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader);
+        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader);
+        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader, windowShader);
 
-        // now show the texture
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
         glDisable(GL_STENCIL_TEST);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -406,6 +404,67 @@ int main()
     return 0;
 }
 
+void renderWindows(glm::mat4 projection, Shader &windowShader) {
+    static bool first = true;
+    static unsigned int windowTexture = loadTexture("../glass-texture-png-4-transparent.png");
+    static unsigned int windowVAO, windowVBO;
+    vector<glm::vec3> windows
+    {
+        glm::vec3(5.0f, 0.0f, -0.48f),
+        glm::vec3( 4.5f, 0.0f, 0.51f),
+        glm::vec3( 6.0f, 0.0f, 0.7f),
+        glm::vec3(3.3f, 0.0f, -2.3f),
+        glm::vec3( 5.5f, 0.0f, -0.6f)
+    };
+
+    std::sort(windows.begin(), windows.end(), [] (const glm::vec3 a, const glm::vec3 b) {
+        return glm::length(camera.Position.z - b.z) - glm::length(camera.Position.z - a.z) < 0;
+    });
+
+    windowShader.use();
+    windowShader.setMat4("projection", projection);
+    windowShader.setMat4("view", camera.GetViewMatrix());
+    windowShader.setVec3("viewPos", camera.Position);
+    glm::mat4 model;
+
+    if (first) {
+        first = false;
+
+        windowShader.setInt("texture1", 0);
+
+        float verts[] = {
+            0.0f, 0.5f,  0.0f, 0.0f, 0.0f,
+            0.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+            1.0f, -0.5f, 0.0f, 1.0f, 1.0f,
+
+            0.0f, 0.5f, 0.0f, 0.0f, 0.0f,
+            1.0f, -0.5f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.5f, 0.0f, 1.0f, 0.0f
+        };
+
+        glGenVertexArrays(1, &windowVAO);
+        glGenBuffers(1, &windowVBO);
+        glBindVertexArray(windowVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, windowVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+
+    glBindVertexArray(windowVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, windowTexture);
+    for (auto window : windows)
+    {
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, window);
+        windowShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+}
+
 void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, bool depth, unsigned int depthMap) {
     static unsigned int brickTexture = loadTexture("../marble.jpg");
     static unsigned int brickNormalmap = loadTexture("../marble_normal.png");
@@ -418,24 +477,22 @@ void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, 
     model = glm::translate(model, glm::vec3(0.0, -0.5, 0.0));
     model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     if (first) {
-        // positions
+
         glm::vec3 pos1(-25.0f,  25.0f, 0.0f);
         glm::vec3 pos2(-25.0f, -25.0f, 0.0f);
         glm::vec3 pos3( 25.0f, -25.0f, 0.0f);
         glm::vec3 pos4( 25.0f,  25.0f, 0.0f);
-        // texture coordinates
+
         glm::vec2 uv1(0.0f, 25.0f);
         glm::vec2 uv2(0.0f, 0.0f);
         glm::vec2 uv3(25.0f, 0.0f);
         glm::vec2 uv4(25.0f, 25.0f);
-        // normal vector
+
         glm::vec3 nm(0.0f, 0.0f, 1.0f);
 
-        // calculate tangent/bitangent vectors of both triangles
         glm::vec3 tangent1, bitangent1;
         glm::vec3 tangent2, bitangent2;
-        // triangle 1
-        // ----------
+
         glm::vec3 edge1 = pos2 - pos1;
         glm::vec3 edge2 = pos3 - pos1;
         glm::vec2 deltaUV1 = uv2 - uv1;
@@ -453,8 +510,6 @@ void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, 
         bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
         bitangent1 = glm::normalize(bitangent1);
 
-        // triangle 2
-        // ----------
         edge1 = pos3 - pos1;
         edge2 = pos4 - pos1;
         deltaUV1 = uv3 - uv1;
@@ -467,15 +522,12 @@ void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, 
         tangent2.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
         tangent2 = glm::normalize(tangent2);
 
-
         bitangent2.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
         bitangent2.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
         bitangent2.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
         bitangent2 = glm::normalize(bitangent2);
 
-
         float wallVertices[] = {
-                // positions            // normal         // texcoords  // tangent                          // bitangent
                 pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
                 pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
                 pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
@@ -526,7 +578,7 @@ void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader, Shader &skyboxShader, bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader) {
+void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader, Shader &skyboxShader, bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader) {
     glm::mat4 projection, view;
     projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
@@ -539,6 +591,7 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
     }
 
     renderWall(pointLightPositions[0], projection, wallshader, depth, depthMap);
+    //renderWindows(projection, windowShader);
 
     lightingShader.use();
     lightingShader.setVec3("viewPos", camera.Position);
@@ -591,29 +644,13 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
     lightingShader.setMat4("projection", projection);
     lightingShader.setMat4("view", view);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.1f));
-    model = glm::rotate(model, (float) glm::radians(-20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::translate(model, glm::vec3(-2.0f, 6.5f, 0.0f));
-    lightingShader.setMat4("model", model);
-
-    myModel->Draw(lightingShader);
+    glm::mat4 model;
     model = glm::mat4(1.0f);
     lightingShader.setMat4("model", model);
 
     lampShader.use();
     lampShader.setMat4("projection", projection);
     lampShader.setMat4("view", view);
-
-    glBindVertexArray(lightVAO);
-    for (int i = 0; i < 1; ++i) { // max 4
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, pointLightPositions[i]);
-        model = glm::scale(model, glm::vec3(0.2f));
-        lampShader.setMat4("model", model);
-
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
 
     // skybox
     view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
@@ -627,7 +664,8 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthFunc(GL_LESS);
 
-    // Draw Cubes
+    //renderWindows(projection, windowShader);
+
     lightingShader.use();
     if (stencil) {
         glStencilFunc(GL_ALWAYS, 1, 0xff);
@@ -681,10 +719,36 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
             //ourModel.Draw(lightingShader);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-        glStencilMask(0xff);
+        glStencilMask(0x00);
         glEnable(GL_DEPTH_TEST);
     }
 
+    if (depth) {
+        glDisable(GL_STENCIL_TEST);
+        glBindVertexArray(lightVAO);
+        lampShader.use();
+        for (int i = 0; i < 1; ++i) { // max 4
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f));
+            lampShader.setMat4("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+        lightingShader.use();
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.1f));
+        model = glm::rotate(model, (float) glm::radians(-20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(-2.0f, 6.5f, 0.0f));
+        lightingShader.setMat4("model", model);
+
+        myModel->Draw(lightingShader);
+
+        renderWindows(projection, windowShader);
+    }
+    //glDisable(GL_STENCIL_TEST);
+    //renderWindows(projection, windowShader);
 }
 
 void processInput(GLFWwindow *window)
