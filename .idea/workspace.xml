@@ -12,14 +12,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="26603c9c-19b3-4d25-887b-506a70dd7ca4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/glass-texture-png-4-transparent.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/windowfShader.glsl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/windowvShader.glsl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gold.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pbrfShader.glsl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pbrvShader.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Camera.h" beforeDir="false" afterPath="$PROJECT_DIR$/Camera.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/gltutorial.dir/main.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/gltutorial.dir/main.cpp.o" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/gltutorial" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/gltutorial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fragmentShaderSource.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/fragmentShaderSource.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -105,6 +104,8 @@
       <workItem from="1574435078744" duration="5507000" />
       <workItem from="1574517716332" duration="13893000" />
       <workItem from="1574601209918" duration="2513000" />
+      <workItem from="1574702800477" duration="1202000" />
+      <workItem from="1574798794019" duration="2827000" />
     </task>
     <servers />
   </component>

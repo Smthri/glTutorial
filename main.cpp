@@ -19,7 +19,9 @@ void processInput(GLFWwindow *window);
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(vector<string> faces);
 void renderWindows(glm::mat4 projection, Shader &wallshader);
-void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader, bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader);
+void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader,
+        bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader,
+        Shader &pbrShader);
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
@@ -107,6 +109,7 @@ int main()
     Shader screenShader("../qvShader.glsl", "../qfShader.glsl");
     Shader wallshader("../wallvertexShader.glsl", "../wallfragmentShader.glsl");
     Shader windowShader("../windowvShader.glsl", "../windowfShader.glsl");
+    Shader pbrShader("../pbrvShader.glsl", "../pbrfShader.glsl");
 
     myModel = new Model("../meshes/spaceship/Intergalactic_Spaceship-(Wavefront).obj");
 
@@ -371,12 +374,12 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glStencilMask(0x00);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader);
+        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader, pbrShader);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader, windowShader);
+        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader, windowShader, pbrShader);
 
         glDisable(GL_STENCIL_TEST);
         glDisable(GL_DEPTH_TEST);
@@ -402,6 +405,31 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+void PBRCube(glm::mat4 projection, Shader &pbrShader, bool depth, unsigned int depthMap) {
+    static unsigned int pbrTexture = loadTexture("../gold.jpg");
+    glm::vec3 position = glm::vec3(1.0, 0.0, 6.0);
+
+    pbrShader.use();
+    pbrShader.setInt("gold", 0);
+    pbrShader.setMat4("projection", projection);
+    pbrShader.setMat4("view", camera.GetViewMatrix());
+    pbrShader.setVec3("viewPos", camera.Position);
+    pbrShader.setVec3("lightPos", pointLightPositions[0]);
+
+    glm::mat4 model = glm::mat4(1.0);
+    model = glm::translate(model, position);
+    pbrShader.setMat4("model", model);
+
+    glBindVertexArray(cubeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, pbrTexture);
+    if (depth) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+    }
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void renderWindows(glm::mat4 projection, Shader &windowShader) {
@@ -578,7 +606,9 @@ void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader, Shader &skyboxShader, bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader) {
+void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader, Shader &skyboxShader,
+        bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader,
+        Shader &pbrShader) {
     glm::mat4 projection, view;
     projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
@@ -725,6 +755,9 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
 
     if (depth) {
         glDisable(GL_STENCIL_TEST);
+
+        PBRCube(projection, pbrShader, depth, depthMap);
+
         glBindVertexArray(lightVAO);
         lampShader.use();
         for (int i = 0; i < 1; ++i) { // max 4
@@ -766,6 +799,10 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
         gauss = 1;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        camera.ProcessKeyboard(DOWN, deltaTime);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
