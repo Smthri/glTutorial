@@ -3,21 +3,20 @@
 #include <GLFW/glfw3.h>
 #include "Shader.h"
 #include "Camera.h"
-#include "Mesh.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include "Model.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(const char *path);
-unsigned int loadCubemap(vector<string> faces);
+unsigned int loadCubemap(std::vector<std::string> faces);
 void renderWindows(glm::mat4 projection, Shader &wallshader);
 void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader,
         bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader,
@@ -27,8 +26,6 @@ const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
 
 int gauss = 0;
-
-Model *myModel;
 
 unsigned int quadVBO, quadVAO;
 
@@ -110,8 +107,6 @@ int main()
     Shader wallshader("../wallvertexShader.glsl", "../wallfragmentShader.glsl");
     Shader windowShader("../windowvShader.glsl", "../windowfShader.glsl");
     Shader pbrShader("../pbrvShader.glsl", "../pbrfShader.glsl");
-
-    myModel = new Model("../meshes/spaceship/Intergalactic_Spaceship-(Wavefront).obj");
 
     float quadVertices[] = {
             -1.0f,  1.0f,  0.0f, 1.0f,
@@ -240,7 +235,7 @@ int main()
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
@@ -266,7 +261,7 @@ int main()
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    vector<string> faces = {
+    std::vector<std::string> faces = {
             "../hw_nightsky/nightsky_ft.tga",
             "../hw_nightsky/nightsky_bk.tga",
             "../hw_nightsky/nightsky_up.tga",
@@ -374,7 +369,7 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glStencilMask(0x00);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader, pbrShader);
+        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader, simpleDepthShader);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
@@ -436,7 +431,7 @@ void renderWindows(glm::mat4 projection, Shader &windowShader) {
     static bool first = true;
     static unsigned int windowTexture = loadTexture("../glass-texture-png-4-transparent.png");
     static unsigned int windowVAO, windowVBO;
-    vector<glm::vec3> windows
+    std::vector<glm::vec3> windows
     {
         glm::vec3(5.0f, 0.0f, -0.48f),
         glm::vec3( 4.5f, 0.0f, 0.51f),
@@ -755,9 +750,6 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
 
     if (depth) {
         glDisable(GL_STENCIL_TEST);
-
-        PBRCube(projection, pbrShader, depth, depthMap);
-
         glBindVertexArray(lightVAO);
         lampShader.use();
         for (int i = 0; i < 1; ++i) { // max 4
@@ -776,10 +768,9 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
         model = glm::translate(model, glm::vec3(-2.0f, 6.5f, 0.0f));
         lightingShader.setMat4("model", model);
 
-        myModel->Draw(lightingShader);
-
         renderWindows(projection, windowShader);
     }
+    PBRCube(projection, pbrShader, depth, depthMap);
     //glDisable(GL_STENCIL_TEST);
     //renderWindows(projection, windowShader);
 }
@@ -834,7 +825,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(yoffset);
 }
 
-unsigned int loadCubemap(vector<string> faces) {
+unsigned int loadCubemap(std::vector<std::string> faces) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
@@ -845,7 +836,7 @@ unsigned int loadCubemap(vector<string> faces) {
         if (data) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         } else {
-            cout << "Failed to load cubemap file " << faces[i] << endl;
+            std::cout << "Failed to load cubemap file " << faces[i] << std::endl;
         }
         stbi_image_free(data);
     }

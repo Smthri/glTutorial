@@ -127,16 +127,23 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir) {
     return ambient + shadow * (diffuse + specular);
 }
 
+const float y = 0.4;
+
 void main() {
     vec3 norm = normalize(fs_in.Normal);
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
     //vec3 result = CalcDirLight(dirLight, norm, viewDir);
     vec3 result = CalcPointLight(pointLight[0], norm, fs_in.FragPos, viewDir);
 
-    vec3 fogColor = vec3(0.5, 0.6, 0.7);
-    float distance = length(viewPos - fs_in.FragPos);
-    float fogAmount = 1.0 - exp(-distance * 0.01);
-    result = mix(result, fogColor, fogAmount);
+    float deltay = y - fs_in.FragPos.y;
+    if (deltay > 0.0) {
+        vec3 fogColor = vec3(0.5, 0.6, 0.7);
+        float density = 0.1;
+        float angle = max(dot(vec3(0.0, 1.0, 0.0), viewDir), dot(vec3(0.0, -1.0, 0.0), viewDir));
+        float fogAmount = clamp(deltay / angle * density, 0.0, 0.3);
+
+        result = mix(result, fogColor, fogAmount);
+    }
 
     FragColor = vec4(result, 1.0);
 }
