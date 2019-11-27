@@ -24,9 +24,9 @@ const float metallic = 1.0;
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
-    float a      = roughness*roughness;
-    float a2     = a*a;
-    float NdotH  = max(dot(N, H), 0.0);
+    float a = roughness*roughness;
+    float a2 = a*a;
+    float NdotH = max(dot(N, H), 0.0);
     float NdotH2 = NdotH*NdotH;
 
     float num   = a2;
@@ -85,7 +85,7 @@ void main() {
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
 
     float NdotL = max(dot(N, L), 0.0);
-    I += I * NdotL * 5.0;
+    I += I * NdotL * 10.0;
 
     I += (kD / PI + specular) * radiance * NdotL;
 

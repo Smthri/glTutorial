@@ -80,6 +80,12 @@ public:
             Position += WorldUp * velocity;
         if (direction == DOWN)
             Position -= WorldUp * velocity;
+
+        if (Position.y < 0.0) Position.y = 0.0;
+        if (Position.x < -25.0) Position.x = -25.0;
+        if (Position.x > 25.0) Position.x = 25.0;
+        if (Position.z < -25.0) Position.z = -25.0;
+        if (Position.z > 25.0) Position.z = 25.0;
     }
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
