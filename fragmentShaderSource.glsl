@@ -139,8 +139,16 @@ void main() {
     if (deltay > 0.0) {
         vec3 fogColor = vec3(0.5, 0.6, 0.7);
         float density = 0.1;
-        float angle = max(dot(vec3(0.0, 1.0, 0.0), viewDir), dot(vec3(0.0, -1.0, 0.0), viewDir));
-        float fogAmount = clamp(deltay / angle * density, 0.0, 0.3);
+        float l;
+        float fogAmount = 0.0;
+        if (viewPos.y <= y) {
+            l = length(viewPos - fs_in.FragPos);
+            fogAmount = l * density;
+        } else {
+            float angle = dot(vec3(0.0, 1.0, 0.0), viewDir);
+            fogAmount = deltay / angle * density;
+        }
+        fogAmount = clamp(fogAmount, 0.0, 0.3);
 
         result = mix(result, fogColor, fogAmount);
     }

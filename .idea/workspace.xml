@@ -12,11 +12,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="26603c9c-19b3-4d25-887b-506a70dd7ca4" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/brick.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/brick_bump.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/brick_normal.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bricks2.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bricks2_disp.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bricks2_normal.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/parallaxfShader.glsl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/parallaxvShader.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Camera.h" beforeDir="false" afterPath="$PROJECT_DIR$/Camera.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/gltutorial.dir/main.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/gltutorial.dir/main.cpp.o" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/gltutorial" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/gltutorial" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pbrfShader.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/pbrfShader.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fragmentShaderSource.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/fragmentShaderSource.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -104,6 +113,9 @@
       <workItem from="1574702800477" duration="1202000" />
       <workItem from="1574798794019" duration="2827000" />
       <workItem from="1574859781180" duration="5286000" />
+      <workItem from="1574974105010" duration="2925000" />
+      <workItem from="1575135337350" duration="7929000" />
+      <workItem from="1575203084756" duration="4053000" />
     </task>
     <servers />
   </component>

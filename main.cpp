@@ -20,7 +20,7 @@ unsigned int loadCubemap(std::vector<std::string> faces);
 void renderWindows(glm::mat4 projection, Shader &wallshader);
 void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader,
         bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader,
-        Shader &pbrShader);
+        Shader &pbrShader, Shader &parallaxShader);
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
@@ -76,7 +76,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "mashgraf", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -107,6 +107,7 @@ int main()
     Shader wallshader("../wallvertexShader.glsl", "../wallfragmentShader.glsl");
     Shader windowShader("../windowvShader.glsl", "../windowfShader.glsl");
     Shader pbrShader("../pbrvShader.glsl", "../pbrfShader.glsl");
+    Shader parallaxShader("../parallaxvShader.glsl", "../parallaxfShader.glsl");
 
     float quadVertices[] = {
             -1.0f,  1.0f,  0.0f, 1.0f,
@@ -364,17 +365,19 @@ int main()
         lightingShader.setFloat("far_plane", far_plane);
         wallshader.use();
         wallshader.setFloat("far_plane", far_plane);
+        parallaxShader.use();
+        parallaxShader.setFloat("far_plane", far_plane);
 
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glStencilMask(0x00);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader, simpleDepthShader);
+        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader, simpleDepthShader, simpleDepthShader);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader, windowShader, pbrShader);
+        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader, windowShader, pbrShader, parallaxShader);
 
         glDisable(GL_STENCIL_TEST);
         glDisable(GL_DEPTH_TEST);
@@ -400,6 +403,123 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+void ParallaxWall(glm::mat4 projection, Shader &parallaxShader, bool depth, unsigned int depthMap) {
+    static unsigned int brickTexture = loadTexture("../bricks2.jpg");
+    static unsigned int brickNormalMap = loadTexture("../bricks2_normal.jpg");
+    static unsigned int brickDisplacementMap = loadTexture("../bricks2_disp.jpg");
+    static bool first = true;
+    static unsigned int parallaxVAO, parallaxVBO;
+
+    if (first) {
+        first = false;
+
+        glm::vec3 pos1(-25.0f,  1.0f, 0.0f);
+        glm::vec3 pos2(-25.0f, -1.0f, 0.0f);
+        glm::vec3 pos3( 25.0f, -1.0f, 0.0f);
+        glm::vec3 pos4( 25.0f,  1.0f, 0.0f);
+
+        glm::vec2 uv1(0.0f, 1.0f);
+        glm::vec2 uv2(0.0f, 0.0f);
+        glm::vec2 uv3(25.0f, 0.0f);
+        glm::vec2 uv4(25.0f, 1.0f);
+
+        glm::vec3 nm(0.0f, 0.0f, 1.0f);
+
+        glm::vec3 tangent1, bitangent1;
+        glm::vec3 tangent2, bitangent2;
+
+        glm::vec3 edge1 = pos2 - pos1;
+        glm::vec3 edge2 = pos3 - pos1;
+        glm::vec2 deltaUV1 = uv2 - uv1;
+        glm::vec2 deltaUV2 = uv3 - uv1;
+
+        GLfloat f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+        tangent1 = glm::normalize(tangent1);
+
+        bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+        bitangent1 = glm::normalize(bitangent1);
+
+        edge1 = pos3 - pos1;
+        edge2 = pos4 - pos1;
+        deltaUV1 = uv3 - uv1;
+        deltaUV2 = uv4 - uv1;
+
+        f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        tangent2.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent2.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent2.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+        tangent2 = glm::normalize(tangent2);
+
+        bitangent2.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent2.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent2.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+        bitangent2 = glm::normalize(bitangent2);
+
+        float wallVertices[] = {
+                pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+                pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+                pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+
+                pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+                pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+                pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
+        };
+        // configure plane VAO
+        glGenVertexArrays(1, &parallaxVAO);
+        glGenBuffers(1, &parallaxVBO);
+        glBindVertexArray(parallaxVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, parallaxVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(wallVertices), &wallVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(6 * sizeof(float)));
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(8 * sizeof(float)));
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
+    }
+
+    parallaxShader.use();
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(10.0f, 0.5, 0.0));
+    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
+    parallaxShader.setMat4("model", model);
+    parallaxShader.setMat4("projection", projection);
+    parallaxShader.setMat4("view", camera.GetViewMatrix());
+    parallaxShader.setVec3("lightPos", pointLightPositions[0]);
+    parallaxShader.setVec3("viewPos", camera.Position);
+    parallaxShader.setFloat("height_scale", 0.07f);
+
+    parallaxShader.setInt("diffuseMap", 0);
+    parallaxShader.setInt("normalMap", 1);
+    parallaxShader.setInt("depthMap", 2);
+    parallaxShader.setInt("shadowMap", 3);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, brickTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, brickNormalMap);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, brickDisplacementMap);
+    if (depth) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+    }
+
+    glBindVertexArray(parallaxVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 void PBRCube(glm::mat4 projection, Shader &pbrShader, bool depth, unsigned int depthMap) {
@@ -603,7 +723,7 @@ void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, 
 
 void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader, Shader &skyboxShader,
         bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader,
-        Shader &pbrShader) {
+        Shader &pbrShader, Shader &parallaxShader) {
     glm::mat4 projection, view;
     projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
@@ -746,10 +866,13 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
         }
         glStencilMask(0x00);
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_STENCIL_TEST);
     }
 
+    PBRCube(projection, pbrShader, depth, depthMap);
+    ParallaxWall(projection, parallaxShader, depth, depthMap);
+
     if (depth) {
-        glDisable(GL_STENCIL_TEST);
         glBindVertexArray(lightVAO);
         lampShader.use();
         for (int i = 0; i < 1; ++i) { // max 4
@@ -770,7 +893,6 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
 
         renderWindows(projection, windowShader);
     }
-    PBRCube(projection, pbrShader, depth, depthMap);
     //glDisable(GL_STENCIL_TEST);
     //renderWindows(projection, windowShader);
 }

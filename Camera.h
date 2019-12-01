@@ -86,6 +86,7 @@ public:
         if (Position.x > 25.0) Position.x = 25.0;
         if (Position.z < -25.0) Position.z = -25.0;
         if (Position.z > 25.0) Position.z = 25.0;
+        if (Position.y > 5.5) Position.y = 5.5;
     }
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
