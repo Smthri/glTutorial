@@ -79,31 +79,41 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     return finalTexCoords;
 }
 
+const float y = 0.4;
+
 void main()
 {
-    // offset texture coordinates with Parallax Mapping
     vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
     vec2 texCoords = ParallaxMapping(fs_in.TexCoords,  viewDir);
-    //if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-        //discard;
 
     vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
 
-    // then sample textures with new texture coords
     vec3 diffuse = texture(diffuseMap, texCoords).rgb;
     vec3 normal = texture(normalMap, texCoords).rgb;
     normal = normalize(normal * 2.0 - 1.0);
-    // proceed with lighting code
 
     vec3 ambient = diffuse * 0.2;
     float diff = max(dot(lightDir, normal), 0.0);
     diffuse = diffuse * diff;
 
-    float shadow = ShadowCalculation2(fs_in.TangentFragPos, normal, lightDir);
-    FragColor = vec4(ambient + diffuse, 1.0);
-//    if (shadow == 0.0) {
-//        FragColor = vec4(ambient + diffuse, 1.0);
-//    } else {
-//        FragColor = vec4(ambient + diffuse*shadow, 1.0);
-//    }
+    vec3 result = ambient + diffuse;
+
+    float deltay = y - fs_in.TangentFragPos.y;
+    if (deltay > 0.0) {
+        vec3 fogColor = vec3(0.5, 0.6, 0.7);
+        float density = 0.1;
+        float l;
+        float fogAmount = 0.0;
+        if (fs_in.TangentViewPos.y <= y) {
+            l = length(fs_in.TangentViewPos - fs_in.TangentFragPos);
+            fogAmount = l * density;
+        } else {
+            float angle = dot(vec3(0.0, 1.0, 0.0), viewDir);
+            fogAmount = deltay / angle * density;
+        }
+        fogAmount = clamp(fogAmount, 0.0, 0.3);
+
+        result = mix(result, fogColor, fogAmount);
+    }
+    FragColor = vec4(result, 1.0);
 }

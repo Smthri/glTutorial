@@ -20,7 +20,7 @@ unsigned int loadCubemap(std::vector<std::string> faces);
 void renderWindows(glm::mat4 projection, Shader &wallshader);
 void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &planeShader, Shader &skyboxShader,
         bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader,
-        Shader &pbrShader, Shader &parallaxShader);
+        Shader &pbrShader, Shader &parallaxShader, Shader &reflectiveShader, Shader &refractionShader);
 
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
@@ -108,6 +108,8 @@ int main()
     Shader windowShader("../windowvShader.glsl", "../windowfShader.glsl");
     Shader pbrShader("../pbrvShader.glsl", "../pbrfShader.glsl");
     Shader parallaxShader("../parallaxvShader.glsl", "../parallaxfShader.glsl");
+    Shader reflectiveShader("../reflectivevShader.glsl", "../reflectivefShader.glsl");
+    Shader refractionShader("../reflectivevShader.glsl", "../refractivefShader.glsl");
 
     float quadVertices[] = {
             -1.0f,  1.0f,  0.0f, 1.0f,
@@ -372,12 +374,12 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glStencilMask(0x00);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader, simpleDepthShader, simpleDepthShader);
+        RenderScene(simpleDepthShader, lampShader, simpleDepthShader, skyboxShader, false, 0, false, stencilShader, windowShader, simpleDepthShader, simpleDepthShader, reflectiveShader, refractionShader);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader, windowShader, pbrShader, parallaxShader);
+        RenderScene(lightingShader, lampShader, wallshader, skyboxShader, true, depthCubemap, true, stencilShader, windowShader, pbrShader, parallaxShader, reflectiveShader, refractionShader);
 
         glDisable(GL_STENCIL_TEST);
         glDisable(GL_DEPTH_TEST);
@@ -405,8 +407,44 @@ int main()
     return 0;
 }
 
+void refractiveCube(glm::mat4 projection, Shader &refractionShader, unsigned int skyboxTexture) {
+    glm::vec3 position = glm::vec3(-4.0, 3.0 + 0.5*(sin(glfwGetTime())), 0.0);
+
+    refractionShader.use();
+    refractionShader.setMat4("projection", projection);
+    refractionShader.setMat4("view", camera.GetViewMatrix());
+    refractionShader.setVec3("cameraPos", camera.Position);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    refractionShader.setMat4("model", model);
+    refractionShader.setInt("skybox", 0);
+
+    glBindVertexArray(cubeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void reflectiveCube(glm::mat4 projection, Shader &reflectiveShader, unsigned int skyBoxTexture) {
+    glm::vec3 position = glm::vec3(0.0, 3.0, 0.0);
+
+    reflectiveShader.use();
+    reflectiveShader.setMat4("projection", projection);
+    reflectiveShader.setMat4("view", camera.GetViewMatrix());
+    reflectiveShader.setVec3("cameraPos", camera.Position);
+    glm::mat4 model = glm::mat4(1.0);
+    model = glm::translate(model, position);
+    reflectiveShader.setMat4("model", model);
+    reflectiveShader.setInt("skybox", 0);
+
+    glBindVertexArray(cubeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
 void ParallaxWall(glm::mat4 projection, Shader &parallaxShader, bool depth, unsigned int depthMap) {
-    static unsigned int brickTexture = loadTexture("../bricks2.jpg");
+    static unsigned int brickTexture = loadTexture("../test.jpg");
     static unsigned int brickNormalMap = loadTexture("../bricks2_normal.jpg");
     static unsigned int brickDisplacementMap = loadTexture("../bricks2_disp.jpg");
     static bool first = true;
@@ -603,6 +641,8 @@ void renderWindows(glm::mat4 projection, Shader &windowShader) {
     {
         model = glm::mat4(1.0f);
         model = glm::translate(model, window);
+        //model = glm::rotate(model, glm::acos(glm::max(glm::dot(glm::normalize(camera.Position - window), glm::vec3(0.0, 0.0, 1.0)), glm::dot(glm::normalize(camera.Position - window), glm::vec3(0.0, 0.0, -1.0)))), glm::vec3(0.0, 1.0, 0.0));
+        //model *= glm::lookAt(window, glm::normalize(camera.Position - window), glm::vec3(0.0, 1.0, 0.0));
         windowShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
@@ -723,7 +763,7 @@ void renderWall(glm::vec3 &lightPos, glm::mat4 &projection, Shader &wallshader, 
 
 void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader, Shader &skyboxShader,
         bool depth, unsigned int depthMap, bool stencil, Shader &stencilShader, Shader &windowShader,
-        Shader &pbrShader, Shader &parallaxShader) {
+        Shader &pbrShader, Shader &parallaxShader, Shader &reflectiveShader, Shader &refractionShader) {
     glm::mat4 projection, view;
     projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
@@ -871,8 +911,11 @@ void RenderScene(Shader &lightingShader, Shader &lampShader, Shader &wallshader,
 
     PBRCube(projection, pbrShader, depth, depthMap);
     ParallaxWall(projection, parallaxShader, depth, depthMap);
+    reflectiveCube(projection, reflectiveShader, cubeMapTexture);
+    refractiveCube(projection, refractionShader, cubeMapTexture);
 
     if (depth) {
+
         glBindVertexArray(lightVAO);
         lampShader.use();
         for (int i = 0; i < 1; ++i) { // max 4
